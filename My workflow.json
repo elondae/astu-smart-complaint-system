@@ -1,5 +1,5 @@
 {
-  "name": "My workflow",
+  "name": "yene hasab",
   "nodes": [
     {
       "parameters": {
@@ -104,7 +104,10 @@
         "tableId": "users",
         "filters": {
           "conditions": [
-            {}
+            {
+              "keyName": "email",
+              "keyValue": "={{ $json.body.email }}"
+            }
           ]
         }
       },
@@ -116,13 +119,190 @@
       ],
       "id": "726c64aa-3c8c-4250-b6cf-f78f14a7ca9a",
       "name": "Get a row",
+      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "id": "aAg1PBp3LtLKYiuM",
           "name": "Supabase account"
         }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}",
+        "options": {}
       },
-      "disabled": true
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        464
+      ],
+      "id": "a8e2fdb0-9af9-4c26-8223-a3bc452e9337",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// Get password from Webhook1\nconst password = $('Webhook1').first().json.body.password;\n\n// Convert to SHA256 hash\nconst hash = crypto.createHash('sha256')\n  .update(password)\n  .digest('hex');\n\n// Return only the hashed password\nreturn [{\n  password_hash: hash\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        304
+      ],
+      "id": "d14b3cfc-6c38-4255-9406-2c08ec63fa6d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0919c5c4-b7ec-4cab-b6cf-e88cebbd902e",
+              "leftValue": "={{ $json.password_hash }}",
+              "rightValue": "={{ $('Get a row').item.json.password_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "57cf46ea-c388-497f-852b-8f910c990637",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "={{ $('Webhook1').item.json.body.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1088,
+        448
+      ],
+      "id": "73aeff09-e654-4caa-b2a9-09d44b2e34ef",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"user\": {\n    \"id\": \"{{ $('Get a row').item.json.id }}\",\n    \"name\": \" {{ $('Get a row').item.json.name }}\",\n    \"email\": \"{{ $('Get a row').item.json.email }}\",\n    \"role\": \"student\"\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1424,
+        352
+      ],
+      "id": "ff9ca691-4578-48dc-ab4b-1941bf81220f",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "74358e6d-550a-40fa-8b1d-197f46b97b63",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "={{ $('Webhook1').item.json.body.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "00033f1e-98fe-4194-8d4e-bd0af2da0ede",
+              "leftValue": "={{ $json.password_hash }}",
+              "rightValue": "={{ $('Get a row').item.json.password_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        848,
+        304
+      ],
+      "id": "1bd3e9cd-4d46-4f41-aae8-6e090f7c58bb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        240
+      ],
+      "id": "f33308f2-c867-4236-bad0-b0feb1ee4ee7",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1e4dbcf2-556b-45b0-aed2-1f9c6634058b",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        304
+      ],
+      "id": "455dfb8c-bba0-43ef-8bf9-5669bbd0192e",
+      "name": "If2"
     }
   ],
   "pinData": {},
@@ -170,6 +350,76 @@
           }
         ]
       ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
@@ -178,7 +428,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "40a1c105-f691-4e4d-abf7-a713293e4e75",
+  "versionId": "3367e924-75af-4e09-9fee-85858796a4fa",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "0352cc77f6463cd69e94c9755278c2c616854b35957ecba307365adb22d3d8d6"
