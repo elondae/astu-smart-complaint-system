@@ -27,6 +27,7 @@ The system ensures accountability, tracking, and secure management of complaints
 - Implement secure authentication and authorization
 - Integrate AI chatbot assistance
 - Ensure cybersecurity best practices
+  
 
 ---
 
@@ -47,7 +48,8 @@ The system is divided into modular workflows:
 - Supabase storage integration
 - Complaint metadata storage
 - Default status: `Open`
-
+- Each student can submit a maximum of 3 complaints per day.
+  
 ## 3️⃣ Complaint Status Management
 - Status lifecycle:
   - Open
