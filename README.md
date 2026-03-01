@@ -145,7 +145,6 @@ The system is deployed via n8n Cloud and integrates with Supabase backend servic
 # 👨‍💻 Developed For
 
 3rd & 4th Year Final Project  
-Department of [Your Department Name]  
 Adama Science and Technology University
 
 ---
