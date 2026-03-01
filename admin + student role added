@@ -1,0 +1,1222 @@
+{
+  "name": "yene hasab updated v2",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst name = $input.first().json.body.name;\nconst email = $input.first().json.body.email;\nconst password = $input.first().json.body.password;\n\nconst hash = crypto.createHash('sha256')\n  .update(password)\n  .digest('hex');\n\nreturn [{\n  name,\n  email,\n  password_hash: hash\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a0af3aab-05f8-49f4-831f-545366657d6b",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "tableId": "users",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "password_hash",
+              "fieldValue": "={{ $json.password_hash }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9d05f93f-f3d8-417e-9035-7805fdce9a2f",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "{ \n  \"status\": \"user created\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "35c2bdb4-4a07-4e29-bdcc-9a4e6d32a112",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "keyValue": "={{ $json.body.email }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        208,
+        304
+      ],
+      "id": "726c64aa-3c8c-4250-b6cf-f78f14a7ca9a",
+      "name": "Get a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        464
+      ],
+      "id": "a8e2fdb0-9af9-4c26-8223-a3bc452e9337",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// Get password from Webhook1\nconst password = $('login').first().json.body.password;\n\n// Convert to SHA256 hash\nconst hash = crypto.createHash('sha256')\n  .update(password)\n  .digest('hex');\n\n// Return only the hashed password\nreturn [{\n  password_hash: hash\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        304
+      ],
+      "id": "d14b3cfc-6c38-4255-9406-2c08ec63fa6d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0919c5c4-b7ec-4cab-b6cf-e88cebbd902e",
+              "leftValue": "={{ $json.password_hash }}",
+              "rightValue": "={{ $('Get a row').item.json.password_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "57cf46ea-c388-497f-852b-8f910c990637",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "={{ $('login').item.json.body.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1088,
+        448
+      ],
+      "id": "73aeff09-e654-4caa-b2a9-09d44b2e34ef",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"token\": \"{{ $json.token }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1520,
+        320
+      ],
+      "id": "ff9ca691-4578-48dc-ab4b-1941bf81220f",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "74358e6d-550a-40fa-8b1d-197f46b97b63",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "={{ $('login').item.json.body.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "00033f1e-98fe-4194-8d4e-bd0af2da0ede",
+              "leftValue": "={{ $json.password_hash }}",
+              "rightValue": "={{ $('Get a row').item.json.password_hash }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        848,
+        304
+      ],
+      "id": "1bd3e9cd-4d46-4f41-aae8-6e090f7c58bb",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Invalid credentials\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1088,
+        208
+      ],
+      "id": "f33308f2-c867-4236-bad0-b0feb1ee4ee7",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1e4dbcf2-556b-45b0-aed2-1f9c6634058b",
+              "leftValue": "={{ $('Get a row').item.json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        304
+      ],
+      "id": "455dfb8c-bba0-43ef-8bf9-5669bbd0192e",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1472,
+        832
+      ],
+      "id": "aef850b1-9ad9-482c-a85f-078729e4241c",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "tableId": "complaints",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.body.title }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.body.category }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.status }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $json.body.description }}"
+            },
+            {
+              "fieldId": "student_id",
+              "fieldValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        832
+      ],
+      "id": "3724d0b2-6bdd-4e2c-a930-e2f39d079c3d",
+      "name": "Create a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// Get full user from database node\nconst user = $('Get a row').first().json;\n\n// JWT Header\nconst header = Buffer.from(JSON.stringify({\n  alg: \"HS256\",\n  typ: \"JWT\"\n})).toString(\"base64url\");\n\n// JWT Payload\nconst payload = Buffer.from(JSON.stringify({\n  id: user.id,\n  email: user.email,\n  role: user.role,\n  exp: Math.floor(Date.now() / 1000) + (60 * 60)\n})).toString(\"base64url\");\n\n// Signature\nconst signature = crypto\n  .createHmac(\"sha256\", \"ASTU_SECRET_2026\")\n  .update(`${header}.${payload}`)\n  .digest(\"base64url\");\n\nconst token = `${header}.${payload}.${signature}`;\n\nreturn [{ token }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        320
+      ],
+      "id": "c482c714-665d-4bad-b0d3-9c0be2864f54",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\n// Get token from header\nconst authHeader = $json.headers.authorization;\n\nif (!authHeader) {\n  throw new Error(\"No token provided\");\n}\n\n// Remove \"Bearer \"\nconst token = authHeader.split(\" \")[1];\n\n// Split token into parts\nconst [header, payload, signature] = token.split(\".\");\n\n// Recreate expected signature\nconst expectedSignature = crypto\n  .createHmac(\"sha256\", \"ASTU_SECRET_2026\")\n  .update(`${header}.${payload}`)\n  .digest(\"base64url\");\n\n// Check signature\nif (signature !== expectedSignature) {\n  throw new Error(\"Invalid token\");\n}\n\n// Decode payload\nconst decodedPayload = JSON.parse(\n  Buffer.from(payload, \"base64url\").toString()\n);\n\n// Check expiration\nif (decodedPayload.exp < Math.floor(Date.now() / 1000)) {\n  throw new Error(\"Token expired\");\n}\n\n// DEBUG OUTPUT\nconsole.log(\"Decoded Payload:\", decodedPayload);\n\n// Return both debug info and user_id\nreturn [{\n  user_id: decodedPayload.id,\n \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        832
+      ],
+      "id": "9e0ba178-4e37-4ff8-8ba4-a606c1736534",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c8c92357-1db6-4e26-bc1d-e968c24c933a",
+              "name": "user_id",
+              "value": "={{ $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "c0b3bd86-f7bf-4815-a58e-b9d7359f4c1f",
+              "name": "body.title",
+              "value": "={{ $('complain receiver').item.json.body.title }}",
+              "type": "string"
+            },
+            {
+              "id": "58c68e29-9626-4829-b28b-de99ce528a85",
+              "name": "body.description",
+              "value": "={{ $('complain receiver').item.json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "9cc70c4d-db6e-458e-9f13-37b1b9fecd8c",
+              "name": "body.category",
+              "value": "={{ $('complain receiver').item.json.body.category }}",
+              "type": "string"
+            },
+            {
+              "id": "196f873c-712c-461b-970f-9dcaf00bc8a1",
+              "name": "=status",
+              "value": "unseen",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        832
+      ],
+      "id": "005c044e-322e-4d79-9311-8a0cf8ba6b1a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "height": 816,
+        "width": 2208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -208
+      ],
+      "id": "b6c66338-7549-4b37-8dfa-dbf798372fa1",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1488,
+        1072
+      ],
+      "id": "11e1cba1-3205-48f1-90fc-a2c9e99fb854",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst authHeader = $json.headers.authorization;\n\nif (!authHeader) {\n  return [{\n    error: true,\n    message: \"No token provided\",\n    statusCode: 401\n  }];\n}\n\nconst token = authHeader.split(\" \")[1];\n\nconst [header, payload, signature] = token.split(\".\");\n\nconst expectedSignature = crypto\n  .createHmac(\"sha256\", \"ASTU_SECRET_2026\")\n  .update(`${header}.${payload}`)\n  .digest(\"base64url\");\n\nif (signature !== expectedSignature) {\n  return [{\n    error: true,\n    message: \"Invalid token\",\n    statusCode: 401\n  }];\n}\n\nconst decodedPayload = JSON.parse(\n  Buffer.from(payload, \"base64url\").toString()\n);\n\nif (decodedPayload.exp < Math.floor(Date.now() / 1000)) {\n  return [{\n    error: true,\n    message: \"Token expired\",\n    statusCode: 401\n  }];\n}\n\nreturn [{\n  user_id: decodedPayload.id,\n  statusCode: 200\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        1072
+      ],
+      "id": "0ced8a2e-e6a5-40aa-a8a1-a9a33e853309",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "complaints",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "student_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        1072
+      ],
+      "id": "d80027a2-3ee7-4ff0-8c27-93b4a8da8e03",
+      "name": "Get many rows",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const complaints = $input.all().map(item => {\n  const c = item.json;\n\n  return {\n    id: c.id,\n    title: c.title,\n    description: c.description,\n    category: c.category,\n    status: c.status,\n    created_at: c.created_at,\n    attachment_url: c.attachment_url\n  };\n});\n\nreturn [{\n  success: true,\n  complaints\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        1072
+      ],
+      "id": "d64ea92a-e501-4e4f-8a58-f3459730416b",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "path": "/admin/complaints",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        272,
+        1648
+      ],
+      "id": "d175d62f-a08b-42bb-981a-74956e1d7a80",
+      "name": "Webhook4",
+      "webhookId": "cb8e0f87-b086-42e4-b919-0c8072316ecf"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "signup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d2749077-e843-4140-91d0-d89881be0349",
+      "name": "signup",
+      "webhookId": "418ef687-e638-46a4-b479-8ec204c9d595"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        304
+      ],
+      "id": "bae29cb7-29ff-4dc9-a424-61825dc8f292",
+      "name": "login",
+      "webhookId": "75021219-c37b-49ff-8dbe-4ffa6599ba5a"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "submit-complaint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        832
+      ],
+      "id": "90607e99-46e2-4910-8ee2-472169adb50a",
+      "name": "complain receiver",
+      "webhookId": "9176c8a4-054e-4b94-adea-ecee2a6c8b75"
+    },
+    {
+      "parameters": {
+        "path": "my-complaints",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        400,
+        1072
+      ],
+      "id": "831372ea-1db4-49b0-90df-3764264d2386",
+      "name": "my complain reminder",
+      "webhookId": "ae7a29d4-2b6b-42d1-a953-c45020def872"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst authHeader = $json.headers.authorization;\n\nif (!authHeader) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"No token\"\n      }\n    }\n  ];\n}\n\nconst token = authHeader.split(\" \")[1];\nconst [header, payload, signature] = token.split(\".\");\n\nconst expectedSignature = crypto\n  .createHmac(\"sha256\", \"ASTU_SECRET_2026\")\n  .update(`${header}.${payload}`)\n  .digest(\"base64url\");\n\nif (signature !== expectedSignature) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Invalid token\"\n      }\n    }\n  ];\n}\n\nconst decoded = JSON.parse(\n  Buffer.from(payload, \"base64url\").toString()\n);\n\nif (decoded.exp < Math.floor(Date.now() / 1000)) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Token expired\"\n      }\n    }\n  ];\n}\n\nif (decoded.role !== \"admin\") {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Forbidden\"\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      success: true\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        1648
+      ],
+      "id": "dc9c2971-8817-47e0-86e3-80e43d8840e4",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "complaints"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        992,
+        1520
+      ],
+      "id": "4f35e3d1-a718-4243-b9f7-a4c84d2279b0",
+      "name": "Get many rows1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const complaints = $input.all().map(i => i.json);\nreturn [{ success: true, complaints }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        1520
+      ],
+      "id": "53391db1-05fe-451a-96a8-039f8de9212f",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1584,
+        1520
+      ],
+      "id": "17d6b235-a4bd-4f0a-b66c-fd4bcb6e928c",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "height": 528,
+        "width": 1376
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        288,
+        720
+      ],
+      "id": "5209185d-149e-4668-af19-16666db441d1",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0a363a8-b1bf-4b92-a420-c17d49d97766",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        752,
+        1648
+      ],
+      "id": "2f0a98a7-4df4-430f-b6f9-7770875026c1",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        912,
+        1888
+      ],
+      "id": "b041f14e-1295-422a-afbb-51d48b63fbda",
+      "name": "Respond to Webhook7"
+    },
+    {
+      "parameters": {
+        "httpMethod": "PUT",
+        "path": "admin/update-complaint",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        2224
+      ],
+      "id": "0198a5e1-f343-479c-a0ff-b914d23c9008",
+      "name": "Webhook",
+      "webhookId": "7c0ec926-7f91-449d-9260-d16009f58014"
+    },
+    {
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\n\nconst authHeader = $json.headers.authorization;\n\nif (!authHeader) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"No token\"\n      }\n    }\n  ];\n}\n\nconst token = authHeader.split(\" \")[1];\nconst [header, payload, signature] = token.split(\".\");\n\nconst expectedSignature = crypto\n  .createHmac(\"sha256\", \"ASTU_SECRET_2026\")\n  .update(`${header}.${payload}`)\n  .digest(\"base64url\");\n\nif (signature !== expectedSignature) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Invalid token\"\n      }\n    }\n  ];\n}\n\nconst decoded = JSON.parse(\n  Buffer.from(payload, \"base64url\").toString()\n);\n\nif (decoded.exp < Math.floor(Date.now() / 1000)) {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Token expired\"\n      }\n    }\n  ];\n}\n\nif (decoded.role !== \"admin\") {\n  return [\n    {\n      json: {\n        success: false,\n        message: \"Forbidden\"\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      success: true\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        2224
+      ],
+      "id": "24871201-b25f-4ff5-aee1-5c88c8f51567",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a0a363a8-b1bf-4b92-a420-c17d49d97766",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        2224
+      ],
+      "id": "09813fed-5ba5-4dff-8d10-10f1846940c9",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        960,
+        2464
+      ],
+      "id": "57ec6c8c-e078-4d23-9764-c5cf1ec8aba6",
+      "name": "Respond to Webhook8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const complaintId = $('Webhook').first().json.body.id;\nconst newStatus = $('Webhook').first().json.body.status;\n\nif (!complaintId || !newStatus) {\n  return [{\n    json: {\n      success: false,\n      message: \"ID and status required\"\n    }\n  }];\n}\n\nconst allowed = [\"unseen\", \"open\", \"in_progress\", \"resolved\", \"rejected\"];\n\nif (!allowed.includes(newStatus)) {\n  return [{\n    json: {\n      success: false,\n      message: \"Invalid status\"\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    success: true,\n    complaintId,\n    newStatus\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        2128
+      ],
+      "id": "2da78ba1-97eb-40c2-8c55-a962bd199cbe",
+      "name": "Code in JavaScript9"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "complaints",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.complaintId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "={{ $json.newStatus }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        2128
+      ],
+      "id": "443113c6-04f7-434f-b562-375fba6a71b9",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "aAg1PBp3LtLKYiuM",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1488,
+        2128
+      ],
+      "id": "360c32b3-ee82-489b-8896-74be93ae3261",
+      "name": "Respond to Webhook9"
+    }
+  ],
+  "pinData": {
+    "signup": [
+      {
+        "json": {
+          "headers": {
+            "host": "aberaaaa.app.n8n.cloud",
+            "user-agent": "PostmanRuntime/7.51.1",
+            "content-length": "103",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cache-control": "no-cache",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "54.86.50.139",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "9d534836097cb296-IAD",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "postman-token": "d3b4159e-c14f-4147-bf4a-00c352c0a3d7",
+            "x-forwarded-for": "54.86.50.139, 162.158.78.8",
+            "x-forwarded-host": "aberaaaa.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-15-595d685d99-sppxl",
+            "x-is-trusted": "yes",
+            "x-real-ip": "54.86.50.139"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "name": "Sara Ahmed",
+            "email": "sara.student@example.com",
+            "password": "MySecurePass456!"
+          },
+          "webhookUrl": "https://aberaaaa.app.n8n.cloud/webhook-test/signup",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Get many rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "signup": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "login": {
+      "main": [
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "complain receiver": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "my complain reminder": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many rows1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Get many rows1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "40890c21-c3e0-4dba-b84d-6aace32f99f0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0352cc77f6463cd69e94c9755278c2c616854b35957ecba307365adb22d3d8d6"
+  },
+  "id": "S90Shy4Nww3CLFaL",
+  "tags": []
+}
